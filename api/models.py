@@ -1,7 +1,5 @@
 from django.db import models
 
-# Create your models here.
-
 class Users(models.Model):
     username = models.CharField(max_length = 16, unique = True)
     email = models.TextField(max_length = 320, unique = True)

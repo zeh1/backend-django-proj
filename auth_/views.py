@@ -5,9 +5,23 @@ from django.http import HttpResponse
 # csrf exempt for api testing
 from django.views.decorators.csrf import csrf_exempt
 
+import json
 
 
-# REMOVE DECORATOR FOR PRODUCTION
+
+# TODO: put functions in its own module
+def get_body_as_json(http_request_body):
+    body_as_string = http_request_body.decode()
+    body_as_dict = json.loads(body_as_string)
+    return body_as_dict
+#
+def retrieve_username(body_as_dict):
+    pass
+#
+
+
+
+# TODO: REMOVE DECORATOR FOR PRODUCTION
 @csrf_exempt
 def login(request):
     
@@ -16,18 +30,24 @@ def login(request):
     # return token in json in http body, or return empty string if invalid
 
     # login should only accept post calls
-    # TODO: return a proper http response code
+    # TODO: return a proper http response code; this is only a temp fix
     if request.method != 'POST':
         return HttpResponse('error')
 
-    body = request.body
+    # retrieve body as json
+    body = get_body_as_json(request.body)
 
-    return HttpResponse(body)
+    # TODO: check for existence of username and pw fields
+    #       check that username and pw fields are proper types
+
+
+
+    return HttpResponse('hi')
 #
 
 
 
-# REMOVE DECORATOR FOR PRODUCTION
+# TODO: REMOVE DECORATOR FOR PRODUCTION
 @csrf_exempt
 def signup(request):
 
@@ -42,3 +62,4 @@ def signup(request):
 
 
 # q = request.GET.get('q')
+# type(), type() is <>, isinstance(<>, type)
