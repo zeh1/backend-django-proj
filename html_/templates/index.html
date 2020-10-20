@@ -10,7 +10,7 @@
     <script>
         let button = document.querySelector('button');
         button.onclick = function() {
-            let url = 'http://127.0.0.1:8000/auth/signup'
+            let url = 'http://127.0.0.1:8000/auth/login'
 
             let body = {
                 username: 'user2',
@@ -27,13 +27,14 @@
             }
 
             fetch(url, options).then(data => {
-                console.log(response.status)
-            }).catch(function(){
-                console.log(5)
+                console.log(data.status)
+                return data.json()
+            }).then(data=>{
+                console.log(data)
             })
         }
     </script>
 </body>
 </html>
 
-<!-- catch and finally, error handling and throw -->
+<!-- catch and finally, error handling and throw, data.ok/status etc -->

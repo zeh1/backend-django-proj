@@ -3,6 +3,8 @@ from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseNotAllowed, HttpResponseBadRequest
 from django.http import JsonResponse, HttpResponseNotFound, HttpResponseForbidden
 
+from proj.settings import SECRET_KEY as SECRET
+
 # csrf exempt for api testing
 # do i need csrf with jwt?
 from django.views.decorators.csrf import csrf_exempt
@@ -15,7 +17,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 # TODO: put in its own module
 
-import json, bcrypt, jwt
+import json, bcrypt, jwt, datetime
 
 from api.models import Users
 
@@ -37,11 +39,13 @@ def get_user(username):
     user = Users.objects.get(username = username)
     return user
 
-SECRET = "1507d149-4129-488e-9c71-80552972c7c6"
-
 def create_user(username, password, email):
     new_user = Users(username = username, password = password, email = email)
     new_user.save()
+
+def get_token_as_string(payload):
+    token = jwt.encode(payload, SECRET, algorithm='HS256')
+    return token.decode()
 
 
 
@@ -50,7 +54,7 @@ def create_user(username, password, email):
 # TODO: REMOVE DECORATOR FOR PRODUCTION
 @csrf_exempt
 def login(request):
-    
+
     if request.method != 'POST':
         return HttpResponseNotAllowed(['POST'])
 
@@ -71,10 +75,16 @@ def login(request):
         return HttpResponseForbidden()
 
     # TODO: add expires at
-    token = jwt.encode({'username': username}, SECRET, algorithm='HS256')
-    token_as_string = token.decode()
+    payload = {
+        'username': username
+    }
+    token = get_token_as_string(payload)
+    # print( datetime.datetime.now(), '|', datetime.datetime.utcnow() )
 
-    return JsonResponse({'token': token_as_string})
+    response = JsonResponse({'token': token})
+    
+
+    return response
 #
 
 
