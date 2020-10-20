@@ -1,23 +1,49 @@
 from django.shortcuts import render
 
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseNotAllowed, HttpResponseBadRequest
+from django.http import JsonResponse, HttpResponseNotFound, HttpResponseForbidden
 
 # csrf exempt for api testing
+# do i need csrf with jwt?
 from django.views.decorators.csrf import csrf_exempt
 
-import json
+# TODO: add tests
 
 
 
-# TODO: put functions in its own module
+
+
+# TODO: put in its own module
+
+import json, bcrypt, jwt
+
+from api.models import Users
+
 def get_body_as_json(http_request_body):
     body_as_string = http_request_body.decode()
     body_as_dict = json.loads(body_as_string)
     return body_as_dict
-#
+
 def retrieve_username(body_as_dict):
-    pass
-#
+    return str(body_as_dict["username"])
+
+def retrieve_password(body_as_dict):
+    return str(body_as_dict["password"])
+
+def retrieve_email(body_as_dict):
+    return str(body_as_dict["email"])
+
+def get_user(username):
+    user = Users.objects.get(username = username)
+    return user
+
+SECRET = "1507d149-4129-488e-9c71-80552972c7c6"
+
+def create_user(username, password, email):
+    new_user = Users(username = username, password = password, email = email)
+    new_user.save()
+
+
 
 
 
@@ -25,25 +51,33 @@ def retrieve_username(body_as_dict):
 @csrf_exempt
 def login(request):
     
-    # login takes in user and pw in http body as json
-    # validate username and pw
-    # return token in json in http body, or return empty string if invalid
-
-    # login should only accept post calls
-    # TODO: return a proper http response code; this is only a temp fix
     if request.method != 'POST':
-        return HttpResponse('error')
+        return HttpResponseNotAllowed(['POST'])
 
-    # retrieve body as json
-    body = get_body_as_json(request.body)
+    try:
+        body = get_body_as_json(request.body)
+        username = retrieve_username(body)
+        password = retrieve_password(body)
+    except:
+        return HttpResponseBadRequest()
 
-    # TODO: check for existence of username and pw fields
-    #       check that username and pw fields are proper types
+    try:
+        user = get_user(username)
+    except:
+        return HttpResponseNotFound()
 
+    # TODO: implement bcrypt
+    if user.password != password:
+        return HttpResponseForbidden()
 
+    # TODO: add expires at
+    token = jwt.encode({'username': username}, SECRET, algorithm='HS256')
+    token_as_string = token.decode()
 
-    return HttpResponse('hi')
+    return JsonResponse({'token': token_as_string})
 #
+
+
 
 
 
@@ -51,15 +85,31 @@ def login(request):
 @csrf_exempt
 def signup(request):
 
-    # signup takes in user pw and email in http body as json
-    # validate user for uniqueness
-    # create user in db
-    # return token if success, else return empty string if invalid
-    
-    return HttpResponse('hi')
+    if request.method != 'POST':
+        return HttpResponseNotAllowed(['POST'])
+
+    try:
+        body = get_body_as_json(request.body)
+        username = retrieve_username(body)
+        password = retrieve_password(body)
+        email = retrieve_email(body)
+    except:
+        return HttpResponseBadRequest()
+
+    try:
+        create_user(username, password, email)
+    except:
+        return HttpResponseForbidden()
+
+    # TODO: add expires at
+    token = jwt.encode({'username': username}, SECRET, algorithm='HS256')
+    token_as_string = token.decode()
+
+    return JsonResponse({'token': token_as_string})
 #
 
 
 
+
+
 # q = request.GET.get('q')
-# type(), type() is <>, isinstance(<>, type)
