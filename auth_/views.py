@@ -9,17 +9,16 @@ from proj.settings import SECRET_KEY as SECRET
 # do i need csrf with jwt?
 from django.views.decorators.csrf import csrf_exempt
 
+
+
 # TODO: add tests
 
 
 
-
-
-# TODO: put in its own module
-
+# TODO: put functions its own module
 import json, bcrypt, jwt, datetime
-
 from api.models import Users
+from django.core.serializers.json import DjangoJSONEncoder
 
 def get_body_as_json(http_request_body):
     body_as_string = http_request_body.decode()
@@ -43,9 +42,14 @@ def create_user(username, password, email):
     new_user = Users(username = username, password = password, email = email)
     new_user.save()
 
-def get_token_as_string(payload):
-    token = jwt.encode(payload, SECRET, algorithm='HS256')
-    return token.decode()
+def get_token_as_string(username, joined):
+    payload = {
+        'username': username,
+        'joined': joined,
+        'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)
+    }
+    token = jwt.encode(payload, SECRET, algorithm='HS256').decode()
+    return token
 
 
 
@@ -74,16 +78,13 @@ def login(request):
     if user.password != password:
         return HttpResponseForbidden()
 
-    # TODO: add expires at
-    payload = {
-        'username': username
-    }
-    token = get_token_as_string(payload)
-    # print( datetime.datetime.now(), '|', datetime.datetime.utcnow() )
-
+    # print (json.dumps(user.joined, cls=DjangoJSONEncoder) )
+    # print ( user.joined.__str__() )
+    print ( str(user.joined) )
+    print ( datetime.datetime.strptime(str(user.joined), '%Y-%m-%d %H:%M.%S') )
+    joined = user.joined.__str__()
+    token = get_token_as_string(username, joined)
     response = JsonResponse({'token': token})
-    
-
     return response
 #
 
