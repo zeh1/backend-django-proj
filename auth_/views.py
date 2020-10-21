@@ -5,20 +5,18 @@ from django.http import JsonResponse, HttpResponseNotFound, HttpResponseForbidde
 
 from proj.settings import SECRET_KEY as SECRET
 
-# csrf exempt for api testing
-# do i need csrf with jwt?
+# csrf is not an issue with jwt's
 from django.views.decorators.csrf import csrf_exempt
-
-
 
 # TODO: add tests
 
 
 
-# TODO: put functions its own module
+
+
+# TODO: put functions its own module ----------------------------------------------
 import json, bcrypt, jwt, datetime
 from api.models import Users
-from django.core.serializers.json import DjangoJSONEncoder
 
 def get_body_as_json(http_request_body):
     body_as_string = http_request_body.decode()
@@ -50,12 +48,12 @@ def get_token_as_string(username, joined):
     }
     token = jwt.encode(payload, SECRET, algorithm='HS256').decode()
     return token
+# --------------------------------------------------------------------------------
 
 
 
 
 
-# TODO: REMOVE DECORATOR FOR PRODUCTION
 @csrf_exempt
 def login(request):
 
@@ -77,11 +75,7 @@ def login(request):
     # TODO: implement bcrypt
     if user.password != password:
         return HttpResponseForbidden()
-
-    # print (json.dumps(user.joined, cls=DjangoJSONEncoder) )
-    # print ( user.joined.__str__() )
-    print ( str(user.joined) )
-    print ( datetime.datetime.strptime(str(user.joined), '%Y-%m-%d %H:%M.%S') )
+    
     joined = user.joined.__str__()
     token = get_token_as_string(username, joined)
     response = JsonResponse({'token': token})
@@ -92,7 +86,6 @@ def login(request):
 
 
 
-# TODO: REMOVE DECORATOR FOR PRODUCTION
 @csrf_exempt
 def signup(request):
 
@@ -112,11 +105,10 @@ def signup(request):
     except:
         return HttpResponseForbidden()
 
-    # TODO: add expires at
-    token = jwt.encode({'username': username}, SECRET, algorithm='HS256')
-    token_as_string = token.decode()
-
-    return JsonResponse({'token': token_as_string})
+    joined = get_user(username).joined.__str__()
+    token = get_token_as_string(username, joined)
+    response = JsonResponse({'token': token})
+    return response
 #
 
 
