@@ -20,6 +20,7 @@ class Posts(models.Model):
 
     class Meta:
         verbose_name = "Post"
+        ordering = ['date']
 
 class Replies(models.Model):
     body = models.TextField(max_length = 500, null = False)
@@ -29,4 +30,5 @@ class Replies(models.Model):
 
     class Meta:
         verbose_name = "Replie"
+        ordering = ['date']
 #

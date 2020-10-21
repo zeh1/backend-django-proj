@@ -5,10 +5,11 @@ from django.http import JsonResponse, HttpResponseNotFound, HttpResponseForbidde
 
 from proj.settings import SECRET_KEY as SECRET
 
-# csrf is not an issue with jwt's
+# csrf is not an issue with jwt's not stored in cookies
 from django.views.decorators.csrf import csrf_exempt
 
 # TODO: add tests
+# TODO: fix security exploit where multiple tokens for same user can be created ?
 
 
 
@@ -32,18 +33,26 @@ def retrieve_password(body_as_dict):
 def retrieve_email(body_as_dict):
     return str(body_as_dict["email"])
 
+def retrieve_token(body_as_dict):
+    return str(body_as_dict["token"])
+
+def retrieve_title(body_as_dict):
+    return str(body_as_dict["title"])
+
+def retrieve_body(body_as_dict):
+    return str(body_as_dict["body"])
+
+# TODO: remove method
 def get_user(username):
     user = Users.objects.get(username = username)
     return user
 
-def create_user(username, password, email):
-    new_user = Users(username = username, password = password, email = email)
-    new_user.save()
-
-def get_token_as_string(username, joined):
+# TODO: remove method
+def get_token_as_string(username, user_id, joined):
     payload = {
         'username': username,
         'joined': joined,
+        'user_id': user_id,
         'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)
     }
     token = jwt.encode(payload, SECRET, algorithm='HS256').decode()
@@ -77,7 +86,8 @@ def login(request):
         return HttpResponseForbidden()
     
     joined = user.joined.__str__()
-    token = get_token_as_string(username, joined)
+    user_id = user.pk
+    token = get_token_as_string(username, user_id, joined)
     response = JsonResponse({'token': token})
     return response
 #
@@ -101,12 +111,14 @@ def signup(request):
         return HttpResponseBadRequest()
 
     try:
-        create_user(username, password, email)
+        new_user = Users(username = username, password = password, email = email)
+        user_id = new_user.pk
+        new_user.save()
     except:
         return HttpResponseForbidden()
 
     joined = get_user(username).joined.__str__()
-    token = get_token_as_string(username, joined)
+    token = get_token_as_string(username, user_id, joined)
     response = JsonResponse({'token': token})
     return response
 #
