@@ -3,7 +3,7 @@ from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.http import HttpResponseNotAllowed, HttpResponseNotFound, JsonResponse
 
-# csrf is not an issue with jwt's not stored in cookies
+# csrf is (probably) not an issue with jwt's not stored in cookies
 from django.views.decorators.csrf import csrf_exempt
 
 from api.models import Posts, Replies, Users
@@ -47,10 +47,12 @@ def posts(request):
 
     elif request.method == 'GET':
         
-        offset = int(request.GET.get('offset'))
-
+        offset = request.GET.get('offset')
         if offset == None:
             offset = 0
+        else:
+            offset = int(request.GET.get('offset'))
+
 
         posts = Posts.objects.all()[offset:offset+15]
         results = []
