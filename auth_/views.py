@@ -73,6 +73,7 @@ def login(request):
         body = get_body_as_json(request.body)
         username = retrieve_username(body)
         password = retrieve_password(body)
+        print(body)
     except:
         return HttpResponseBadRequest()
 
@@ -89,6 +90,9 @@ def login(request):
     user_id = user.pk
     token = get_token_as_string(username, user_id, joined)
     response = JsonResponse({'token': token})
+
+    print(user_id)
+
     return response
 #
 
@@ -107,6 +111,8 @@ def signup(request):
         username = retrieve_username(body)
         password = retrieve_password(body)
         email = retrieve_email(body)
+        if username == '' or password == '' or email == '':
+            return HttpResponseBadRequest()
     except:
         return HttpResponseBadRequest()
 
