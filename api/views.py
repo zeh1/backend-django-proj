@@ -90,6 +90,17 @@ def post(request, post_id):
 
     # handle GET/DELETE/PATCH for a single post
 
+    if request.method == 'GET':
+
+        '''
+        try:
+            pass
+        '''
+
+        pass
+    
+
+
     return HttpResponse('hi')
 
 
